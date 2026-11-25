@@ -394,6 +394,27 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
 #app.shake{animation:shake .36s}
 @keyframes shake{0%,100%{transform:none}18%{transform:translate(-3px,2px)}36%{transform:translate(3px,-2px)}54%{transform:translate(-2px,-2px)}72%{transform:translate(2px,2px)}}
 @media(prefers-reduced-motion:reduce){.cut-overlay,.crack{display:none!important}}
+/* ============ POLYGLOT ============ */
+.poly{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;margin-top:36px}
+.poly-stage{position:relative;border:1px solid var(--line);border-radius:24px;background:radial-gradient(120% 120% at 50% 0%,rgba(231,192,106,.12),transparent 60%),#0b0c0f;min-height:320px;display:grid;place-content:center;overflow:hidden;text-align:center;padding:34px 24px}
+.poly-glow{position:absolute;inset:-30%;background:radial-gradient(circle at 50% 55%,rgba(231,192,106,.2),transparent 55%);animation:aurora 12s ease-in-out infinite alternate;pointer-events:none}
+.poly-word{position:relative;z-index:2;font-size:clamp(52px,8.5vw,112px);line-height:1.15;font-weight:800;min-height:1.2em;background:linear-gradient(115deg,#FBF3D2,var(--gold),var(--gold2),var(--champ));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 12px 40px rgba(231,192,106,.25))}
+.poly-word.swap{animation:wordSwap .55s var(--ease)}
+@keyframes wordSwap{0%{opacity:.15;transform:translateY(16px) scale(.95);filter:blur(9px)}100%{opacity:1;transform:none;filter:blur(0)}}
+.poly-lang{position:relative;z-index:2;margin-top:16px;color:var(--gold);font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.poly-meaning{position:relative;z-index:2;margin-top:6px;color:var(--muted);font-size:13px;font-style:italic}
+.poly-meta h3{font-size:20px}
+.poly-meta p{color:#C2C7CD;margin-top:8px;font-size:14px;line-height:1.6}
+.poly-langs{display:grid;gap:10px;margin-top:16px}
+.poly-langs .row{display:flex;justify-content:space-between;gap:12px;border:1px solid var(--line2);border-radius:12px;padding:10px 14px;font-size:14px}
+.poly-langs .row b{color:var(--ink);font-weight:800}
+.poly-langs .row span{color:var(--muted)}
+.wordribbon{position:relative;margin-top:38px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);overflow:hidden;padding:16px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.wordribbon .wtrack{display:flex;gap:40px;width:max-content;white-space:nowrap;align-items:center;animation:scrollx 32s linear infinite}
+.wordribbon:hover .wtrack{animation-play-state:paused}
+.wordribbon .w{font-size:26px;font-weight:800;background:linear-gradient(120deg,#FBF3D2,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.85;transition:opacity .3s,transform .3s var(--ease)}
+.wordribbon .w:hover{opacity:1;transform:translateY(-4px) rotate(-2deg)}
+@media(max-width:880px){.poly{grid-template-columns:1fr;gap:24px}}
 </style>
 </head>
 <body>
@@ -635,6 +656,34 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
           <p class="sublead" style="margin-top:20px">Subtitles for timing, size, colour, outline and position · SRT &amp; VTT both ways · burn-in or sidecar · <b>Import font…</b> for any <code>.ttf/.otf/.woff/.woff2</code>.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- POLYGLOT -->
+  <section class="sec" id="language">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>Polyglot</span>
+      <h2 data-reveal>Bengali-first. <span class="dim">Never Bengali-only.</span></h2>
+      <p class="sublead" data-reveal>Subtitles, titles and voice in the language the story is actually spoken — Bangla, Hindi, Tamil, Arabic, Punjabi, or any face you bring.</p>
+      <div class="poly">
+        <div class="poly-stage" data-reveal>
+          <div class="poly-glow"></div>
+          <div class="poly-word" id="polyWord">সিনেমা</div>
+          <div class="poly-lang" id="polyLang">বাংলা · Bengali</div>
+          <div class="poly-meaning" id="polyMean">cinema</div>
+        </div>
+        <div class="poly-meta" data-reveal data-delay="2">
+          <h3>Rendered in real text.</h3>
+          <p>Not image overlays — live text with correct shaping, kerning and <code>unicode-range</code>, so a script never bleeds into another.</p>
+          <div class="poly-langs">
+            <div class="row"><b>বাংলা</b><span>48 families · 105 faces</span></div>
+            <div class="row"><b>हिन्दी</b><span>Devanagari shaping</span></div>
+            <div class="row"><b>தமிழ் · العربية</b><span>complex &amp; RTL scripts</span></div>
+            <div class="row"><b>Latin</b><span>never overridden</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="wordribbon" aria-hidden="true"><div class="wtrack" id="wordRibbon"></div></div>
     </div>
   </section>
 
@@ -986,6 +1035,51 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
       }
     }
     addEventListener('scroll', checkCuts, {passive:true});
+  }
+  /* ---- polyglot: scramble rotator + multilingual ribbon ---- */
+  var polyWord=document.getElementById('polyWord'), polyLang=document.getElementById('polyLang'), polyMean=document.getElementById('polyMean');
+  if(polyWord){
+    var WORDS=[
+      {t:'সিনেমা',l:'বাংলা · Bengali',m:'cinema',p:'অআকখগঘচছজঝটঠডঢণতথদধনপফবভমযরলশষসহ'},
+      {t:'कहानी',l:'हिन्दी · Hindi',m:'story',p:'अआइईउकखगघचछजझटठडढतथदधनपफबभमयरलवशषसह'},
+      {t:'ভালোবাসা',l:'বাংলা · Bengali',m:'love',p:'অআকখগঘচছজঝটঠডঢণতথদধনপফবভমযরলশষসহ'},
+      {t:'दुनिया',l:'हिन्दी · Hindi',m:'the world',p:'अआइईउकखगघचछजझटठडढतथदधनपफबभमयरलवशषसह'},
+      {t:'சினிமா',l:'தமிழ் · Tamil',m:'cinema',p:'அஆஇஈஉகஙசஞடணதநபமயரலவழளறன'},
+      {t:'سينما',l:'العربية · Arabic',m:'cinema',p:'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'},
+      {t:'ਫਿਲਮ',l:'ਪੰਜਾਬੀ · Punjabi',m:'film',p:'ਅਆਇਈਉਕਖਗਘਚਛਜਝਟਠਡਢਣਤਥਦਧਨਪਫਬਭਮਯਰਲਵ'},
+      {t:'cinema',l:'English',m:'the movies',p:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
+    ];
+    function scrambleWord(el,text,pool,dur){
+      var t0=performance.now(), n=text.length;
+      function tick(t){
+        var k=Math.min(1,(t-t0)/dur), rev=Math.floor(k*n), out='';
+        for(var i=0;i<n;i++){ out += (i<rev ? text.charAt(i) : pool.charAt(Math.floor(Math.random()*pool.length))); }
+        el.textContent=out;
+        if(k<1) requestAnimationFrame(tick); else el.textContent=text;
+      }
+      requestAnimationFrame(tick);
+    }
+    function showWord(idx){
+      var w=WORDS[((idx%WORDS.length)+WORDS.length)%WORDS.length];
+      polyWord.classList.remove('swap'); void polyWord.offsetWidth; polyWord.classList.add('swap');
+      if(reduced){ polyWord.textContent=w.t; } else { scrambleWord(polyWord,w.t,w.p,560); }
+      if(polyLang) polyLang.textContent=w.l;
+      if(polyMean) polyMean.textContent=w.m;
+    }
+    showWord(0);
+    var wi=0, polyTimer=null, polySec=document.getElementById('language');
+    if(!reduced && polySec){
+      new IntersectionObserver(function(es){ es.forEach(function(e){
+        if(e.isIntersecting && !polyTimer){ polyTimer=setInterval(function(){ wi++; showWord(wi); }, 2500); }
+        else if(!e.isIntersecting && polyTimer){ clearInterval(polyTimer); polyTimer=null; }
+      }); }, {threshold:0.25}).observe(polySec);
+    }
+    var wr=document.getElementById('wordRibbon');
+    if(wr){
+      var RL=['সিনেমা','कहानी','cinema','ভালোবাসা','दुनिया','திரைப்படம்','سينما','নমস্কার','नमस्ते','ਫਿਲਮ','Hello','🎬'];
+      var wh=''; for(var a=0;a<RL.length;a++){ wh+='<span class="w">'+RL[a]+'</span>'; }
+      wr.innerHTML=wh+wh;
+    }
   }
 })();
 </script>
