@@ -11,6 +11,7 @@
 <meta property="og:image" content="assets/mayan-reel-studio-logo.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>try{var __t=localStorage.getItem('mrs-theme');if(__t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
 <style>
 :root{
   --bg:#0A0B0D; --bg2:#0E0F12; --panel:#121419; --panel2:#161922;
@@ -425,6 +426,80 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
 .wordribbon .w{font-size:26px;font-weight:800;background:linear-gradient(120deg,#FBF3D2,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.85;transition:opacity .3s,transform .3s var(--ease)}
 .wordribbon .w:hover{opacity:1;transform:translateY(-4px) rotate(-2deg)}
 @media(max-width:880px){.poly{grid-template-columns:1fr;gap:24px}}
+/* ============ LIGHT THEME ============ */
+[data-theme="light"]{
+  --bg:#F3EEE3; --bg2:#EAE3D4; --panel:#FBF7EF; --panel2:#F0E9DA;
+  --ink:#241E14; --muted:#6E6558; --muted2:#8A8172;
+  --gold:#8A5E14; --gold2:#B07E2C; --champ:#3A2E12; --champ2:#4A3A16;
+  --line:rgba(120,90,30,.30); --line2:rgba(30,20,10,.14);
+  --shadow:0 30px 80px -40px rgba(60,40,10,.45);
+}
+body{transition:background-color .35s ease,color .35s ease}
+[data-theme="light"] .gold-text,[data-theme="light"] .stat .num,[data-theme="light"] .poly-word,[data-theme="light"] .bn-glyph,[data-theme="light"] .wordribbon .w{background:linear-gradient(115deg,#6B4E10,#8A5E14 40%,#B07E2C 72%,#6B4E10);-webkit-background-clip:text;background-clip:text;color:transparent}
+[data-theme="light"] .nav.scrolled{background:rgba(244,238,227,.82)}
+[data-theme="light"] .marquee{background:linear-gradient(180deg,rgba(138,94,20,.06),transparent)}
+[data-theme="light"] .card{background:linear-gradient(180deg,#fffdf8,#f6efe1);border-color:var(--line2)}
+[data-theme="light"] .card p{color:#5C5446}
+[data-theme="light"] .card li{color:#4C4436}
+[data-theme="light"] .card .ci{background:rgba(138,94,20,.1)}
+[data-theme="light"] .mini{background:#fbf7ef;border-color:var(--line2)}
+[data-theme="light"] .mini p{color:#5C5446}
+[data-theme="light"] .stat{background:linear-gradient(180deg,#fffdf8,transparent)}
+[data-theme="light"] .stage{background:#fbf7ef}
+[data-theme="light"] .poly-stage{background:radial-gradient(120% 120% at 50% 0%,rgba(138,94,20,.12),transparent 60%),#fbf7ef}
+[data-theme="light"] .poly-meta p{color:#5C5446}
+[data-theme="light"] .poly-langs .row{background:#fbf7ef}
+[data-theme="light"] .poly-langs .row span{color:#7a7266}
+[data-theme="light"] .bn-stage{background:radial-gradient(120% 120% at 50% 0%,rgba(138,94,20,.12),transparent 60%),#fbf7ef}
+[data-theme="light"] .dl{background:radial-gradient(120% 140% at 80% 0%,rgba(138,94,20,.14),transparent 55%),linear-gradient(180deg,#fffdf8,#f4ede0)}
+[data-theme="light"] .foot{background:linear-gradient(180deg,transparent,rgba(120,90,40,.05))}
+[data-theme="light"] .cut-slices .s{background:linear-gradient(180deg,#f3eee3,#e7dfce 55%,#f3eee3)}
+[data-theme="light"] .glass-cracks path{stroke:rgba(45,34,14,.75);filter:drop-shadow(0 0 3px rgba(80,60,25,.5))}
+[data-theme="light"] .glass-cracks path.glow{stroke:rgba(138,94,20,.4)}
+[data-theme="light"] .sublead{color:#4C4436}
+[data-theme="light"] .hero .lead{color:#3E3A31}
+[data-theme="light"] .hero .bit{color:#6E6558}
+[data-theme="light"] .hero .metaline{color:#5C5446}
+[data-theme="light"] .rec{color:#6B4E10;background:rgba(138,94,20,.08)}
+[data-theme="light"] .foot-bottom{color:#5C5446}
+[data-theme="light"] .foot-links a{color:#5C5446}
+[data-theme="light"] .foot-bottom b{color:#2b2417}
+[data-theme="light"] .dl .edition{color:#6E6558}
+[data-theme="light"] .vmeta b{color:#1E1A12}
+
+/* ============ THEME TOGGLE ============ */
+.themebtn{display:inline-flex;align-items:center;background:transparent;border:0;cursor:pointer;padding:0;margin:0 4px 0 6px}
+.tt-track{position:relative;width:54px;height:28px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);display:flex;align-items:center;padding:2px;transition:background .3s}
+[data-theme="light"] .tt-track{background:rgba(120,90,30,.14)}
+.tt-knob{width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,#F6E7B8,var(--gold));box-shadow:0 4px 10px -2px rgba(0,0,0,.5);display:grid;place-items:center;transform:translateX(0);transition:transform .42s var(--ease),background .3s}
+[data-theme="light"] .tt-knob{transform:translateX(24px);background:linear-gradient(180deg,#fff,#e9d9a8)}
+.tt-knob svg{width:13px;height:13px;color:#1a1405}
+.theme-wipe{position:fixed;inset:0;z-index:15000;pointer-events:none;background:var(--wipe-bg,#0A0B0D);clip-path:circle(0px at 90% 40px);opacity:0}
+
+/* ============ MOBILE MENU ============ */
+.menu-btn{display:none;background:transparent;border:0;cursor:pointer;width:42px;height:42px;align-items:center;justify-content:center;flex-direction:column;gap:6px;margin-left:6px}
+.menu-btn i{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:transform .35s var(--ease),opacity .3s}
+.menu-btn.open i:nth-child(1){transform:translateY(8px) rotate(45deg)}
+.menu-btn.open i:nth-child(2){opacity:0}
+.menu-btn.open i:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+@media(max-width:960px){.menu-btn{display:inline-flex}}
+.mobile-menu{position:fixed;inset:0;z-index:1400;background:rgba(10,11,13,.97);backdrop-filter:blur(12px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+[data-theme="light"] .mobile-menu{background:rgba(243,238,227,.98)}
+.mobile-menu.open{opacity:1;visibility:visible}
+.mobile-menu a{font-size:26px;font-weight:800;color:var(--ink);opacity:0;transform:translateY(18px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.mobile-menu.open a{opacity:1;transform:none}
+.mobile-menu.open a:nth-child(1){transition-delay:.04s}
+.mobile-menu.open a:nth-child(2){transition-delay:.08s}
+.mobile-menu.open a:nth-child(3){transition-delay:.12s}
+.mobile-menu.open a:nth-child(4){transition-delay:.16s}
+.mobile-menu.open a:nth-child(5){transition-delay:.2s}
+.mobile-menu.open a:nth-child(6){transition-delay:.24s}
+.mobile-menu.open a:nth-child(7){transition-delay:.28s}
+.mobile-menu.open a:nth-child(8){transition-delay:.32s}
+
+/* ============ BUTTON RIPPLE ============ */
+.ripple{position:fixed;border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(0);background:radial-gradient(circle,rgba(231,192,106,.55),rgba(231,192,106,0) 70%);z-index:10001;animation:rippleGo .6s ease-out forwards}
+@keyframes rippleGo{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
 </style>
 </head>
 <body>
@@ -452,6 +527,7 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
 <div class="scan"></div>
 <div class="vignette"></div>
 <div class="progress" id="progress"></div>
+<div class="theme-wipe" id="themeWipe"></div>
 
 <header class="nav" id="nav">
   <a class="brand" href="#home" aria-label="Mayan Reel Studio home">
@@ -464,12 +540,24 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
     <a href="#features">Features</a>
     <a href="#pipeline">Pipeline</a>
     <a href="#bengali">বাংলা</a>
+    <button class="themebtn" id="themeBtn" type="button" aria-label="Toggle light or dark theme" aria-pressed="false"><span class="tt-track"><span class="tt-knob"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg></span></span></button>
     <a href="#download" class="cta">
       <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 21h14"/></svg>
       Download
     </a>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false"><i></i><i></i><i></i></button>
   </nav>
 </header>
+<nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
+  <a href="#why">Why</a>
+  <a href="#timeline">Editor</a>
+  <a href="#features">Features</a>
+  <a href="#motion">In motion</a>
+  <a href="#pipeline">Pipeline</a>
+  <a href="#bengali">বাংলা</a>
+  <a href="#language">Polyglot</a>
+  <a href="#download">Download</a>
+</nav>
 
 <main id="app">
 
@@ -1136,6 +1224,54 @@ body.intro-done .showreel{animation:dolly 1.1s var(--ease) both;animation-delay:
       var wh=''; for(var a=0;a<RL.length;a++){ wh+='<span class="w">'+RL[a]+'</span>'; }
       wr.innerHTML=wh+wh;
     }
+  }
+  /* ---- theme toggle with circular wipe ---- */
+  var rootEl=document.documentElement;
+  var themeBtn=document.getElementById('themeBtn');
+  var themeWipe=document.getElementById('themeWipe');
+  function applyTheme(t){ rootEl.setAttribute('data-theme',t); try{localStorage.setItem('mrs-theme',t);}catch(e){} if(themeBtn) themeBtn.setAttribute('aria-pressed', t==='light'?'true':'false'); }
+  if(themeBtn && themeWipe){
+    themeBtn.addEventListener('click', function(){
+      var cur=rootEl.getAttribute('data-theme')||'dark';
+      var next=cur==='light'?'dark':'light';
+      var r=themeBtn.getBoundingClientRect();
+      var wx=(r.left+r.width/2), wy=(r.top+r.height/2);
+      themeWipe.style.setProperty('--wipe-bg', next==='light'?'#F3EEE3':'#0A0B0D');
+      themeWipe.style.transition='none'; themeWipe.style.opacity='1';
+      themeWipe.style.clipPath='circle(0px at '+wx+'px '+wy+'px)';
+      void themeWipe.offsetWidth;
+      themeWipe.style.transition='clip-path .6s ease-in';
+      themeWipe.style.clipPath='circle(150% at '+wx+'px '+wy+'px)';
+      setTimeout(function(){ applyTheme(next); themeWipe.style.transition='opacity .35s ease'; themeWipe.style.opacity='0'; }, 600);
+      setTimeout(function(){ themeWipe.style.transition='none'; themeWipe.style.opacity='0'; }, 1000);
+    });
+  }
+
+  /* ---- mobile menu ---- */
+  var menuBtn=document.getElementById('menuBtn'), mobileMenu=document.getElementById('mobileMenu');
+  function closeMobile(){ if(mobileMenu) mobileMenu.classList.remove('open'); if(menuBtn){ menuBtn.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); } document.body.style.overflow=''; }
+  if(menuBtn && mobileMenu){
+    menuBtn.addEventListener('click', function(){
+      var open=mobileMenu.classList.toggle('open');
+      menuBtn.classList.toggle('open', open);
+      menuBtn.setAttribute('aria-expanded', open?'true':'false');
+      document.body.style.overflow= open?'hidden':'';
+    });
+    mobileMenu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', closeMobile); });
+    addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeMobile(); } });
+  }
+
+  /* ---- tactile button ripple ---- */
+  if(!reduced){
+    document.querySelectorAll('.btn,.nav .cta,.menu-btn,.themebtn').forEach(function(b){
+      b.addEventListener('click', function(e){
+        var r=b.getBoundingClientRect(), d=Math.max(r.width,r.height)*1.6;
+        var rip=document.createElement('span'); rip.className='ripple';
+        rip.style.width=d+'px'; rip.style.height=d+'px';
+        rip.style.left=e.clientX+'px'; rip.style.top=e.clientY+'px';
+        document.body.appendChild(rip); setTimeout(function(){ rip.remove(); }, 650);
+      });
+    });
   }
 })();
 </script>
