@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mayan Reel Studio — the offline cinematic studio for Windows</title>
+<meta name="description" content="An all-in-one video studio for Windows: edit, generate, caption, mix and export — offline, GPU-first, MIT licensed.">
+<meta name="theme-color" content="#0A0B0D">
+<meta property="og:title" content="Mayan Reel Studio">
+<meta property="og:description" content="Edit, generate, caption, mix and export — offline, GPU-first, MIT licensed.">
+<meta property="og:image" content="assets/mayan-reel-studio-logo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#0A0B0D; --bg2:#0E0F12; --panel:#121419; --panel2:#161922;
+  --ink:#F5F2EA; --muted:#9AA0A6; --muted2:#6E747C;
+  --gold:#E7C06A; --gold2:#C8923B; --champ:#F6E7B8; --champ2:#F3DFA9;
+  --line:rgba(231,192,106,.16); --line2:rgba(255,255,255,.07);
+  --ok:#38D39F; --wip:#E7C06A; --plan:#7A8290;
+  --shadow:0 30px 80px -30px rgba(0,0,0,.9);
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+  --serif:ui-serif,"Iowan Old Style","Palatino Linotype",Georgia,"Times New Roman",serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --maxw:1180px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow-x:hidden;
+  line-height:1.55;
+}
+::selection{background:rgba(231,192,106,.28);color:#fff}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+h1,h2,h3{margin:0;line-height:1.05;letter-spacing:-.02em;font-weight:800}
+p{margin:0}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+.serif{font-family:var(--serif)}
+.gold-text{
+  background:linear-gradient(115deg,#FBF3D2 0%,var(--gold) 30%,var(--gold2) 55%,var(--champ) 80%,#FBF3D2 100%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 8s linear infinite;
+}
+@keyframes shimmer{to{background-position:220% 0}}
+
+/* ---------- film grain + vignette + scanlines ---------- */
+.grain{position:fixed;inset:-50%;z-index:9998;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation:grainMove .5s steps(3) infinite;}
+@keyframes grainMove{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}
+.vignette{position:fixed;inset:0;z-index:9997;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 0%,transparent 55%,rgba(0,0,0,.55) 100%);
+  box-shadow:inset 0 0 220px rgba(0,0,0,.7);}
+.scan{position:fixed;inset:0;z-index:9996;pointer-events:none;opacity:.35;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);}
+
+/* ---------- cursor spotlight ---------- */
+.spot{position:fixed;left:0;top:0;width:520px;height:520px;border-radius:50%;z-index:1;pointer-events:none;
+  transform:translate(-50%,-50%);opacity:0;transition:opacity .4s;
+  background:radial-gradient(circle,rgba(231,192,106,.14),rgba(231,192,106,.05) 40%,transparent 65%);
+  mix-blend-mode:screen;will-change:transform;}
+body.has-cursor .spot{opacity:1}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;gap:24px;
+  padding:14px 26px;transition:background .4s,backdrop-filter .4s,border-color .4s;
+  border-bottom:1px solid transparent;}
+.nav.scrolled{background:rgba(10,11,13,.72);backdrop-filter:blur(16px) saturate(140%);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);border-bottom:1px solid var(--line2);}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.01em;font-size:16px}
+.brand img{width:30px;height:30px;filter:drop-shadow(0 4px 14px rgba(231,192,106,.35))}
+.brand b{font-weight:800}
+.brand .thin{color:var(--muted);font-weight:500}
+.nav .links{display:flex;gap:22px;margin-left:auto;align-items:center}
+.nav .links a{font-size:13.5px;color:var(--muted);font-weight:600;letter-spacing:.01em;position:relative;padding:4px 0;transition:color .25s}
+.nav .links a::after{content:"";position:absolute;left:0;right:100%;bottom:-2px;height:1.5px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:right .35s var(--ease)}
+.nav .links a:hover{color:var(--ink)}
+.nav .links a:hover::after{right:0}
+.nav .cta{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;
+  background:linear-gradient(180deg,#F3DFA9,var(--gold) 60%,var(--gold2));color:#1a1405;font-weight:800;font-size:13px;
+  box-shadow:0 8px 24px -8px rgba(231,192,106,.7),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .25s var(--ease),box-shadow .25s;white-space:nowrap;}
+.nav .cta:hover{transform:translateY(-1px);box-shadow:0 12px 30px -8px rgba(231,192,106,.85),inset 0 1px 0 rgba(255,255,255,.6)}
+.progress{position:fixed;top:0;left:0;height:2px;width:0;z-index:1001;
+  background:linear-gradient(90deg,var(--gold2),var(--gold),var(--champ));box-shadow:0 0 12px rgba(231,192,106,.8)}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:10px;border-radius:14px;padding:15px 26px;font-weight:800;font-size:15px;
+  border:1px solid var(--line);cursor:pointer;position:relative;overflow:hidden;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;background:transparent;color:var(--ink);}
+.btn-primary{background:linear-gradient(180deg,#F7E9BE,var(--gold) 55%,var(--gold2));color:#1a1405;border-color:transparent;
+  box-shadow:0 16px 40px -16px rgba(231,192,106,.9),inset 0 1px 0 rgba(255,255,255,.55);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 24px 50px -16px rgba(231,192,106,1),inset 0 1px 0 rgba(255,255,255,.6)}
+.btn-ghost{backdrop-filter:blur(8px);background:rgba(255,255,255,.03)}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--line);box-shadow:0 16px 40px -18px rgba(0,0,0,.9)}
+.btn .ico{width:18px;height:18px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding:120px 0 70px;overflow:hidden}
+.hero .aurora{position:absolute;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(38% 44% at 22% 28%,rgba(231,192,106,.16),transparent 60%),
+    radial-gradient(34% 40% at 80% 24%,rgba(200,146,59,.14),transparent 60%),
+    radial-gradient(46% 52% at 62% 88%,rgba(120,90,40,.18),transparent 62%);
+  filter:blur(20px);animation:aurora 22s ease-in-out infinite alternate;}
+@keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(3%,-2%,0) scale(1.08)}100%{transform:translate3d(-2%,2%,0) scale(1.03)}}
+.grid-bg{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(231,192,106,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(231,192,106,.05) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(80% 70% at 50% 40%,#000 40%,transparent 85%);
+  -webkit-mask-image:radial-gradient(80% 70% at 50% 40%,#000 40%,transparent 85%);}
+.hero-inner{position:relative;z-index:2;max-width:var(--maxw);margin:0 auto;padding:0 26px;width:100%;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center}
+.rec{display:inline-flex;align-items:center;gap:10px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(231,192,106,.06);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--champ2)}
+.rec .dot{width:9px;height:9px;border-radius:50%;background:#ff4d4d;box-shadow:0 0 12px #ff4d4d;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:.15}}
+.hero h1{font-size:clamp(42px,6.4vw,84px);margin:20px 0 0;font-weight:900;letter-spacing:-.035em}
+.hero h1 .l2{display:block}
+.hero .lead{margin-top:20px;font-size:clamp(15px,1.5vw,18.5px);color:#C9CDD2;max-width:34ch;line-height:1.6}
+.hero .bit{color:var(--muted)}
+.hero .actions{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+.hero .metaline{margin-top:26px;display:flex;gap:26px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.hero .metaline b{color:var(--ink)}
+.hero .metaline span{display:inline-flex;align-items:center;gap:7px}
+
+/* logo card on right */
+.showreel{position:relative;z-index:2;aspect-ratio:4/5;border-radius:24px;overflow:hidden;
+  border:1px solid var(--line);background:#0c0d10 var(--cover,none) center/cover no-repeat;box-shadow:var(--shadow);
+  transform:perspective(1000px) rotateY(-6deg) rotateX(3deg);transition:transform .6s var(--ease)}
+.showreel:hover{transform:perspective(1000px) rotateY(0) rotateX(0)}
+.showreel .veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,11,13,.15),rgba(10,11,13,.85));}
+.showreel .tc{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;color:var(--champ2);text-shadow:0 1px 6px #000}
+.showreel .play{position:absolute;inset:0;display:grid;place-items:center}
+.showreel .play button{width:84px;height:84px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(10,11,13,.35);backdrop-filter:blur(6px);cursor:pointer;display:grid;place-items:center;
+  transition:transform .3s var(--ease),background .3s}
+.showreel .play button:hover{transform:scale(1.08);background:rgba(231,192,106,.25)}
+.showreel .play svg{width:26px;height:26px;fill:#fff;margin-left:4px}
+.showreel .cap{position:absolute;left:16px;bottom:16px;right:16px}
+.showreel .cap .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:800}
+.showreel .cap .t{font-family:var(--serif);font-size:22px;margin-top:4px}
+.hero .marqlabel{margin-top:14px;color:var(--muted2);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase}
+
+/* floating clapper particles */
+.floaty{position:absolute;z-index:1;color:var(--gold);opacity:.5;pointer-events:none;font-size:20px}
+@keyframes floatUp{0%{transform:translateY(20px) rotate(0);opacity:0}15%{opacity:.55}100%{transform:translateY(-140px) rotate(160deg);opacity:0}}
+
+/* ---------- marquee ---------- */
+.marquee{position:relative;z-index:2;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);
+  background:linear-gradient(180deg,rgba(231,192,106,.03),transparent);overflow:hidden;padding:16px 0}
+.marquee .track{display:flex;gap:44px;white-space:nowrap;width:max-content;animation:scrollx 34s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+.marquee .track span{font-size:15px;font-weight:700;letter-spacing:.02em;color:var(--muted);display:inline-flex;align-items:center;gap:44px}
+.marquee .track span::after{content:"◆";color:var(--gold2);font-size:9px;opacity:.7}
+@keyframes scrollx{to{transform:translateX(-50%)}}
+
+/* ---------- section shells ---------- */
+section{position:relative;z-index:2}
+.sec{padding:96px 0}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.eyebrow::before{content:"";width:26px;height:1.5px;background:linear-gradient(90deg,var(--gold),transparent)}
+.sec h2{font-size:clamp(30px,4vw,52px);font-weight:900;letter-spacing:-.03em}
+.sec h2 .dim{color:var(--muted2);font-weight:700}
+.sec .sublead{color:#B9BEC4;font-size:clamp(15px,1.4vw,18px);max-width:56ch;margin-top:18px;line-height:1.6}
+
+[data-reveal]{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+[data-reveal].in{opacity:1;transform:none}
+[data-reveal][data-delay="1"]{transition-delay:.08s}
+[data-reveal][data-delay="2"]{transition-delay:.16s}
+[data-reveal][data-delay="3"]{transition-delay:.24s}
+[data-reveal][data-delay="4"]{transition-delay:.32s}
+/* ---------- why cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.card{position:relative;border:1px solid var(--line2);border-radius:18px;padding:26px;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.005));overflow:hidden;transform-style:preserve-3d;transition:border-color .3s,box-shadow .3s,transform .18s ease-out;will-change:transform}
+.card::after{content:"";position:absolute;inset:0;border-radius:18px;padding:1px;background:radial-gradient(220px 220px at var(--mx,50%) var(--my,50%),rgba(231,192,106,.55),transparent 60%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .3s;pointer-events:none}
+.card:hover::after{opacity:1}
+.card:hover{border-color:var(--line);box-shadow:0 24px 60px -30px rgba(0,0,0,.9)}
+.card .ci{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:rgba(231,192,106,.08);border:1px solid var(--line);color:var(--gold);margin-bottom:18px}
+.card .ci svg{width:22px;height:22px}
+.card h3{font-size:19px;font-weight:800}
+.card p{color:#AEB3B9;font-size:14px;margin-top:9px;line-height:1.6}
+.card ul{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.card li{font-size:13px;color:#C7CBD0;display:flex;gap:8px;align-items:flex-start}
+.card li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold2);margin-top:7px;flex:0 0 auto}
+.card .tag{position:absolute;top:18px;right:18px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);border:1px solid var(--line);padding:3px 8px;border-radius:999px;background:rgba(231,192,106,.06)}
+.why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:40px}
+.mini{border:1px solid var(--line2);border-radius:16px;padding:22px;background:rgba(255,255,255,.015);transition:transform .3s var(--ease),border-color .3s}
+.mini:hover{transform:translateY(-4px);border-color:var(--line)}
+.mini .k{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.mini p{color:#B7BCC2;font-size:13.5px;line-height:1.6}
+
+/* ---------- timeline scrub ---------- */
+.tl-sec{min-height:230vh;padding:0}
+.tl-sticky{position:sticky;top:0;height:100svh;display:flex;flex-direction:column;justify-content:center;padding:70px 0}
+.tl-card{position:relative;margin-top:34px;border:1px solid var(--line2);border-radius:18px;background:linear-gradient(180deg,#0e1013,#0a0b0d);box-shadow:var(--shadow);overflow:hidden}
+.tl-ruler{display:flex;height:26px;border-bottom:1px solid var(--line2);background:#0b0d10}
+.tl-ruler i{flex:1;border-right:1px solid rgba(255,255,255,.045);position:relative}
+.tl-ruler i::after{content:attr(data-t);position:absolute;left:6px;top:6px;font:9px ui-monospace,SFMono-Regular,monospace;color:var(--muted2)}
+.tl-rows{padding:10px 0}
+.tl-row{display:flex;align-items:center;gap:10px;padding:6px 12px}
+.tl-row .name{width:56px;font-size:10.5px;color:var(--muted);font-weight:800;letter-spacing:.06em;text-transform:uppercase;text-align:right}
+.tl-lane{position:relative;flex:1;height:34px;border-radius:7px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);overflow:hidden}
+.tl-clip{position:absolute;top:3px;bottom:3px;border-radius:5px;overflow:hidden;font-size:11px;display:flex;align-items:center;padding:0 9px;font-weight:700;white-space:nowrap}
+.tl-clip.video{background:repeating-linear-gradient(90deg,#20261a 0 26px,#15190f 26px 30px);color:#e9e3c8;border:1px solid rgba(231,192,106,.32)}
+.tl-clip.audio{background:#102019;color:#bdeed6;border:1px solid rgba(56,211,159,.25)}
+.tl-clip.title{background:linear-gradient(90deg,#3a2a12,#4a3416);color:#f6e7b8;border:1px solid rgba(231,192,106,.4);justify-content:center}
+.wave{display:flex;align-items:center;gap:1px;height:100%;padding:0 4px}
+.wave i{width:2px;background:linear-gradient(180deg,#4fe3ae,#1f8f6a);border-radius:1px;flex:0 0 auto}
+.tl-playhead{position:absolute;top:0;bottom:0;left:5%;width:2px;background:linear-gradient(180deg,var(--champ),var(--gold2));box-shadow:0 0 14px rgba(231,192,106,.9);z-index:5;pointer-events:none}
+.tl-playhead::before{content:"";position:absolute;top:0;left:-5px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--champ)}
+.tl-tc{position:absolute;top:9px;left:10px;background:#0a0b0d;border:1px solid var(--line);color:var(--champ2);font:11px ui-monospace,SFMono-Regular,monospace;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.tl-hint{text-align:center;color:var(--muted2);font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-top:20px}
+
+/* ---------- pipeline stages ---------- */
+.stages{margin-top:40px;display:grid;gap:10px}
+.stage{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:15px 18px;border:1px solid var(--line2);border-radius:14px;background:rgba(255,255,255,.015);transition:border-color .3s,background .3s,transform .3s var(--ease)}
+.stage:hover{border-color:var(--line);background:rgba(231,192,106,.04);transform:translateX(4px)}
+.stage .n{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font:800 13px ui-monospace,monospace;color:var(--gold);border:1px solid var(--line);background:rgba(231,192,106,.06)}
+.stage .st{font-weight:700;font-size:15px}
+.stage .sd{color:var(--muted2);font-size:12.5px;margin-top:2px}
+.pill{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 11px;border-radius:999px;white-space:nowrap}
+.pill.ship{color:#0a1a13;background:linear-gradient(180deg,#5fe3b4,#38d39f);box-shadow:0 6px 18px -8px rgba(56,211,159,.7)}
+.pill.wip{color:#241a05;background:linear-gradient(180deg,#f6e7b8,var(--gold))}
+.pill.plan{color:#C9CDD2;background:rgba(255,255,255,.06);border:1px solid var(--line2)}
+
+/* ---------- bengali ---------- */
+.bn-wrap{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:20px}
+.bn-stage{display:grid;place-items:center;border:1px solid var(--line);border-radius:24px;background:radial-gradient(120% 120% at 50% 0%,rgba(231,192,106,.1),transparent 60%),#0b0c0f;aspect-ratio:1/1;position:relative;overflow:hidden}
+.bn-glyph{font-size:clamp(80px,15vw,180px);line-height:1;font-weight:800;background:linear-gradient(120deg,#FBF3D2,var(--gold),var(--gold2),var(--champ));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 10px 40px rgba(231,192,106,.25))}
+.bn-grid{position:absolute;inset:0;opacity:.4;background-image:linear-gradient(rgba(231,192,106,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(231,192,106,.06) 1px,transparent 1px);background-size:40px 40px;mask-image:radial-gradient(circle at 50% 50%,#000,transparent 75%)}
+.bn-fams{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.bn-fams span{font-size:12px;color:var(--muted);border:1px solid var(--line2);padding:4px 10px;border-radius:999px}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:44px}
+.stat{border:1px solid var(--line2);border-radius:16px;padding:24px;background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
+.stat .num{font-size:clamp(30px,4vw,46px);font-weight:900;letter-spacing:-.03em;background:linear-gradient(120deg,#FBF3D2,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .unit{font-size:18px;color:var(--gold)}
+.stat .lbl{color:var(--muted);font-size:13px;margin-top:6px}
+
+/* ---------- download ---------- */
+.dl-sec{padding:96px 0}
+.dl{border:1px solid var(--line);border-radius:26px;padding:clamp(30px,5vw,64px);position:relative;overflow:hidden;background:radial-gradient(120% 140% at 80% 0%,rgba(231,192,106,.12),transparent 55%),linear-gradient(180deg,#0f1115,#0a0b0d);text-align:center}
+.dl h2{font-size:clamp(30px,4.4vw,56px)}
+.dl p.sublead{margin-left:auto;margin-right:auto;text-align:center}
+.dl .actions{display:flex;gap:14px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+.dl .req{margin-top:30px;display:flex;gap:22px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.dl .req span{display:inline-flex;align-items:center;gap:7px}
+.dl .req svg{width:15px;height:15px;color:var(--ok)}
+.dl .edition{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:22px;font-size:12.5px;color:var(--muted2)}
+.dl .edition code{background:rgba(255,255,255,.06);padding:3px 8px;border-radius:7px;color:var(--champ2);font-size:12px}
+
+/* ---------- footer ---------- */
+.foot{border-top:1px solid var(--line2);padding:44px 0 60px;position:relative;z-index:2;background:linear-gradient(180deg,transparent,rgba(0,0,0,.4))}
+.foot .wrap{display:flex;flex-direction:column;gap:26px}
+.foot-top{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.foot-links{display:flex;gap:22px;flex-wrap:wrap}
+.foot-links a{color:var(--muted);font-size:13.5px;font-weight:600;transition:color .2s}
+.foot-links a:hover{color:var(--gold)}
+.foot-bottom{display:flex;justify-content:space-between;gap:16px;color:var(--muted2);font-size:12.5px;flex-wrap:wrap;border-top:1px solid var(--line2);padding-top:20px}
+.foot-bottom b{color:var(--muted)}
+
+/* ---------- lightbox + toast ---------- */
+.lightbox{position:fixed;inset:0;z-index:9999;display:none;place-items:center;background:rgba(5,6,8,.9);backdrop-filter:blur(10px);padding:40px}
+.lightbox.open{display:grid}
+.lb-inner{max-width:min(1100px,92vw);border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);animation:pop .4s var(--ease)}
+.lb-inner img{max-height:86vh;width:auto;object-fit:contain}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+.lb-close{position:absolute;top:22px;right:26px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:16px;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,30px);background:linear-gradient(180deg,#F6E7B8,var(--gold));color:#1a1405;font-weight:800;padding:12px 20px;border-radius:12px;box-shadow:0 20px 50px -16px rgba(231,192,106,.9);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:10000}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- responsive ---------- */
+@media(max-width:960px){
+ .hero-inner{grid-template-columns:1fr;gap:34px}
+ .showreel{max-width:420px;margin:0 auto;width:100%}
+ .cards{grid-template-columns:1fr 1fr}
+ .why-grid{grid-template-columns:1fr 1fr}
+ .stats{grid-template-columns:1fr 1fr}
+ .bn-wrap{grid-template-columns:1fr;gap:28px}
+ .nav .links a:not(.cta){display:none}
+}
+@media(max-width:600px){
+ .cards,.why-grid{grid-template-columns:1fr}
+ .sec,.dl-sec{padding:70px 0}
+ .wrap{padding:0 18px}
+ .hero{padding-top:100px}
+}
+@media(prefers-reduced-motion:reduce){
+ *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important;scroll-behavior:auto!important}
+ .grain,.scan,.aurora,#floaties{display:none}
+}
+
+</style>
+</head>
+<body>
+<div class="spot" id="spot"></div>
+<div class="grain"></div>
+<div class="scan"></div>
+<div class="vignette"></div>
+<div class="progress" id="progress"></div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#home" aria-label="Mayan Reel Studio home">
+    <img src="assets/mayan-reel-mark.png" alt="">
+    <span><b>Mayan</b> <span class="thin">Reel Studio</span></span>
+  </a>
+  <nav class="links" id="navlinks">
+    <a href="#why">Why</a>
+    <a href="#timeline">Editor</a>
+    <a href="#features">Features</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#bengali">বাংলা</a>
+    <a href="#download" class="cta">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 21h14"/></svg>
+      Download
+    </a>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="aurora"></div>
+    <div class="grid-bg"></div>
+    <div id="floaties"></div>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="rec"><span class="dot"></span> Pre-release · rolling</span>
+        <h1><span class="gold-text">Mayan</span><span class="l2">Reel Studio</span></h1>
+        <p class="lead">An all-in-one video studio for Windows — <span class="bit">edit, generate, caption, mix and export</span> offline. GPU-first. MIT licensed.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="#download">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 21h14"/></svg>
+            Download for Windows
+          </a>
+          <button class="btn btn-ghost" id="watchBtn">
+            <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Watch the reel
+          </button>
+        </div>
+        <div class="metaline">
+          <span><b id="tc">00:00:00:00</b> timeline</span>
+          <span><b>~1.5%</b> idle CPU</span>
+          <span><b>48</b> Bengali families</span>
+          <span><b>0</b> uploads</span>
+        </div>
+      </div>
+
+      <div class="showreel" id="showreel">
+        <div class="veil"></div>
+        <div class="tc"><span>◉ REC</span><span>1920×1080 · 24fps</span></div>
+        <div class="play"><button id="reelPlay" aria-label="Play the reel"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+        <div class="cap"><div class="k">The Cinematic Pipeline</div><div class="t">idea → cast → storyboard → render</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="track" id="marqueeTrack">
+      <span>Frame-accurate timeline</span><span>3D motion creator</span><span>Automatic captions</span><span>VST3 hosting</span><span>Bengali first-class</span><span>GPU encode</span><span>Offline by design</span><span>MIT licensed</span>
+    </div>
+  </div>
+
+  <!-- SECTIONS -->
+  <!-- WHY -->
+  <section class="sec" id="why">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>Why this exists</span>
+      <h2 data-reveal>Most editors assume you <span class="dim">upload your footage.</span></h2>
+      <p class="sublead" data-reveal>This one assumes the opposite — nothing leaves the machine, nothing extra to install, and every AI step is a replaceable artifact you can regenerate on its own.</p>
+      <div class="why-grid">
+        <div class="mini" data-reveal data-delay="1"><div class="k">Nothing leaves</div><p>No uploads, no account, no telemetry. Decode, effects, render and encode all run locally.</p></div>
+        <div class="mini" data-reveal data-delay="2"><div class="k">Nothing to install</div><p>ffmpeg, hardware encoders, the VST3 host and 48 Bengali families ship inside the installer.</p></div>
+        <div class="mini" data-reveal data-delay="3"><div class="k">Free &amp; permissive</div><p>MIT licence, permissive dependencies only — no watermark, no subscription, no pay-per-render.</p></div>
+        <div class="mini" data-reveal data-delay="4"><div class="k">Bengali first</div><p>Fonts, subtitles, layout and voice treat বাংলা as first-class, never a translation layer.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE SCRUB -->
+  <section class="sec tl-sec" id="timeline">
+    <div class="tl-sticky">
+      <div class="wrap">
+        <span class="eyebrow" data-reveal>The editor</span>
+        <h2 data-reveal>A frame-accurate timeline <span class="dim">with the GPU never behind it.</span></h2>
+        <p class="sublead" data-reveal>Multi-track scrub, ripple delete, slip, slide and nesting. Colour, scopes, LUTs and HDR-aware pipelines. Scrubbing this page scrubs the cut —</p>
+        <div class="tl-card" data-reveal>
+          <div class="tl-ruler" id="tlRuler"></div>
+          <div class="tl-rows">
+            <div class="tl-row"><span class="name">T1</span><div class="tl-lane"><div class="tl-clip title" style="left:8%;width:44%">TITLE · MAYAN STUDIO</div></div></div>
+            <div class="tl-row"><span class="name">V2</span><div class="tl-lane"><div class="tl-clip video" style="left:46%;width:30%">B-roll · take 02</div></div></div>
+            <div class="tl-row"><span class="name">V1</span><div class="tl-lane"><div class="tl-clip video" style="left:8%;width:24%">intro-A</div><div class="tl-clip video" style="left:33%;width:24%">grade</div><div class="tl-clip video" style="left:58%;width:34%">-60s-FINAL</div></div></div>
+            <div class="tl-row"><span class="name">A1</span><div class="tl-lane"><div class="tl-clip audio" style="left:8%;width:84%"><span class="wave" id="wave"></span></div></div></div>
+          </div>
+          <div class="tl-playhead" id="tlPlayhead"><span class="tl-tc" id="tlTc">00:00:00</span></div>
+        </div>
+        <div class="tl-hint">↓ Scroll to scrub the timeline ↓</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="sec" id="features">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>What you can do</span>
+      <h2 data-reveal>One studio. <span class="dim">Every stage of the cut.</span></h2>
+      <p class="sublead" data-reveal>A frame-accurate editor, a 3D scene designer, a subtitle and audio workstation and a story-to-video pipeline — in one app.</p>
+      <div class="cards">
+        <div class="card" data-reveal data-delay="1">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h14"/><circle cx="19" cy="12" r="2"/></svg></div>
+          <h3>Edit picture</h3>
+          <p>Multi-track timeline with frame-accurate scrub.</p>
+          <ul><li>Ripple delete, slip, slide, nesting</li><li>Transitions, blend modes, masks, 3D transform</li><li>Speed ramps 0.25×–4×, pitch-corrected</li><li>Colour: curves, HSL, scopes, LUTs, HDR</li><li>Multicam sync · every social canvas</li></ul>
+        </div>
+        <div class="card" data-reveal data-delay="2">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg></div>
+          <h3>Sound</h3>
+          <p>Mix, repair and score on the timeline.</p>
+          <ul><li>EQ, compression, gate, limiter, denoise</li><li>VST3 plugin host, per-clip inserts</li><li>Beat detection &amp; waveform preview</li><li>Voiceover recorded straight to the timeline</li></ul>
+        </div>
+        <div class="card" data-reveal data-delay="3">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div>
+          <h3>Titles &amp; captions</h3>
+          <p>Text, subtitles and graphics that stay editable.</p>
+          <ul><li>Animated text: fills, outlines, gradients</li><li>Automatic captions + full subtitle editor</li><li>48 Bengali families · import any font</li><li>SRT / VTT in and out, burn-in or sidecar</li></ul>
+        </div>
+        <div class="card" data-reveal data-delay="1">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 2v18M4 6.5l8 4.5 8-4.5"/></svg></div>
+          <h3>3D &amp; motion</h3>
+          <p>Build scenes, light them, render into the edit.</p>
+          <ul><li>Motion Creator: primitives, materials, textures</li><li>Animate cameras &amp; objects, render frames</li><li>Optional Blender rigging bridge</li></ul>
+        </div>
+        <div class="card" data-reveal data-delay="2">
+          <div class="tag">agent</div>
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><circle cx="9" cy="13" r="1.2"/><circle cx="15" cy="13" r="1.2"/><path d="M12 4v3M9 19v2m6-2v2"/></svg></div>
+          <h3>AI that edits with you</h3>
+          <p>An agent that drives the editor through tools.</p>
+          <ul><li>Add tracks, cut, grade, caption, render</li><li>Your own OpenAI-compatible key or local model</li><li>Every action is an undoable edit</li></ul>
+        </div>
+        <div class="card" data-reveal data-delay="3">
+          <div class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 21h14"/></svg></div>
+          <h3>Export</h3>
+          <p>Deliverables that look the same as the preview.</p>
+          <ul><li>H.264 / H.265 / ProRes / WebM</li><li>Hardware encoders: nvenc → qsv → amf → libx264</li><li>Optional AI upscaling · HDR · broadcast-legal</li></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section class="sec" id="pipeline" style="background:linear-gradient(180deg,transparent,rgba(231,192,106,.03),transparent)">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>The cinematic pipeline</span>
+      <h2 data-reveal>Idea → publish. <span class="dim">Every stage a versioned artifact.</span></h2>
+      <p class="sublead" data-reveal>Every stage produces an artifact you can review and regenerate on its own — a bad shot costs one shot, not the project.</p>
+      <div class="stages">
+        <div class="stage" data-reveal data-delay="1"><span class="n">01</span><div><div class="st">Editor, timeline, exporting, GPU render</div><div class="sd">Frame-accurate multi-track cut to a delivered file</div></div><span class="pill ship">Shipped</span></div>
+        <div class="stage" data-reveal data-delay="1"><span class="n">02</span><div><div class="st">Subtitles + 48 Bengali families + font import</div><div class="sd">Cue-level editing, SRT/VTT, any face you own</div></div><span class="pill ship">Shipped</span></div>
+        <div class="stage" data-reveal data-delay="2"><span class="n">03</span><div><div class="st">Export presets, upscaling, HDR</div><div class="sd">Hardware encoders picked automatically</div></div><span class="pill ship">Shipped</span></div>
+        <div class="stage" data-reveal data-delay="2"><span class="n">04</span><div><div class="st">Story → storyboard planner, cast profiles</div><div class="sd">Idea to a cast-aware scene plan</div></div><span class="pill wip">In progress</span></div>
+        <div class="stage" data-reveal data-delay="3"><span class="n">05</span><div><div class="st">Keyframe images, image-to-video clips, provider hub</div><div class="sd">Regenerate a single shot, keep the rest</div></div><span class="pill plan">Planned</span></div>
+        <div class="stage" data-reveal data-delay="3"><span class="n">06</span><div><div class="st">Bengali TTS, auto voiceover, per-character voice</div><div class="sd">Offline by default, no cloud dependency</div></div><span class="pill plan">Planned</span></div>
+        <div class="stage" data-reveal data-delay="4"><span class="n">07</span><div><div class="st">SFX / music generation &amp; ducking</div><div class="sd">Score that sits under the dialogue</div></div><span class="pill plan">Planned</span></div>
+        <div class="stage" data-reveal data-delay="4"><span class="n">08</span><div><div class="st">Publish to YouTube / TikTok / Instagram / X</div><div class="sd">Plus a custom destination / webhook</div></div><span class="pill plan">Planned</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENGALI -->
+  <section class="sec" id="bengali">
+    <div class="wrap">
+      <div class="bn-wrap">
+        <div class="bn-stage" data-reveal>
+          <div class="bn-grid"></div>
+          <div class="bn-glyph" id="bnGlyph">অআকখ</div>
+        </div>
+        <div>
+          <span class="eyebrow" data-reveal>বাংলা · Bengali</span>
+          <h2 data-reveal>First-class, <span class="dim">not a translation layer.</span></h2>
+          <p class="sublead" data-reveal>48 families / 105 faces are embedded as WOFF2 and limited with <code>unicode-range: U+0980-09FF…</code>, so Bengali never overrides Latin in the same edit. Pickers preview each face with <b>অআকখ</b>, because a Bengali face has no Latin glyphs.</p>
+          <div class="bn-fams">
+            <span>Noto Serif Bengali</span><span>Li Ador Noirrit</span><span>FN Shorif</span><span>BL Senjuti</span><span>Kalpurush</span><span>+43 more</span>
+          </div>
+          <p class="sublead" style="margin-top:20px">Subtitles for timing, size, colour, outline and position · SRT &amp; VTT both ways · burn-in or sidecar · <b>Import font…</b> for any <code>.ttf/.otf/.woff/.woff2</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFORMANCE -->
+  <section class="sec" id="perf">
+    <div class="wrap">
+      <span class="eyebrow" data-reveal>Performance</span>
+      <h2 data-reveal>Built to sit quietly. <span class="dim">Then sprint on export.</span></h2>
+      <p class="sublead" data-reveal>No idle render loop, no polling timers. Measured on an Intel HD 630, 4 cores.</p>
+      <div class="stats">
+        <div class="stat" data-reveal data-delay="1"><div class="num"><span class="count" data-target="1.5" data-dec="1">0</span><span class="unit">%</span></div><div class="lbl">idle CPU (of 4 cores), 0 rAF</div></div>
+        <div class="stat" data-reveal data-delay="2"><div class="num"><span class="count" data-target="2.2" data-dec="2">0</span><span class="unit">s</span></div><div class="lbl">10s 1080p30 export · h264_qsv</div></div>
+        <div class="stat" data-reveal data-delay="3"><div class="num"><span class="count" data-target="48" data-dec="0">0</span></div><div class="lbl">Bengali families embedded</div></div>
+        <div class="stat" data-reveal data-delay="4"><div class="num"><span class="count" data-target="0" data-dec="0">0</span></div><div class="lbl">uploads · accounts · telemetry</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section class="dl-sec" id="download">
+    <div class="wrap">
+      <div class="dl" data-reveal>
+        <span class="eyebrow" style="justify-content:center">Get the studio</span>
+        <h2>Ready when <span class="gold-text">you</span> are.</h2>
+        <p class="sublead" style="margin-top:16px">Windows 10/11 x64. The installer is per-user — no admin prompt — and everything needed to work ships inside it.</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/bugsfreeweb/MayanReelStudioApp/releases/latest" target="_blank" rel="noopener">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M5 21h14"/></svg>
+            Download installer
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/bugsfreeweb/MayanReelStudioApp/releases/latest" target="_blank" rel="noopener">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12h6"/></svg>
+            Portable EXE
+          </a>
+        </div>
+        <div class="req">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg> Windows 10/11 x64</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg> 4 GB RAM min · 16 GB for 4K</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg> NVENC / Quick Sync / AMF auto</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg> Updates never touch your projects</span>
+        </div>
+        <div class="edition">Install to <code>%LOCALAPPDATA%\Programs\Mayan Reel Studio</code> · projects in <code>%APPDATA%\Mayan Reel Studio</code></div>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <a class="brand" href="#home"><img src="assets/mayan-reel-mark.png" alt=""><span><b>Mayan</b> <span class="thin">Reel Studio</span></span></a>
+      <div class="foot-links">
+        <a href="https://github.com/bugsfreeweb/MayanReelStudio" target="_blank" rel="noopener">Source</a>
+        <a href="https://github.com/bugsfreeweb/MayanReelStudioApp/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="https://github.com/bugsfreeweb/MayanReelStudio/discussions" target="_blank" rel="noopener">Discussions</a>
+        <a href="https://github.com/sponsors/bugsfreeweb" target="_blank" rel="noopener">Sponsor</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>MIT licensed · No watermark · No subscription · No telemetry</span>
+      <span>2026 — Organise by: <b>Bugsfree Studio</b></span>
+    </div>
+  </div>
+</footer>
+
+<!-- reel lightbox -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+  <div class="lb-inner"><img src="assets/cover.jpg" alt="Mayan Reel Studio cover"></div>
+</div>
+
+<div class="toast" id="toast">Rolling! 🎬</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+
+  /* anchor offset under fixed nav */
+  document.querySelectorAll('section[id]').forEach(function(s){ s.style.scrollMarginTop = '84px'; });
+
+  /* --- reveal on scroll --- */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, {threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('[data-reveal]').forEach(function(el){ io.observe(el); });
+
+  /* --- showreel cover --- */
+  var sr = document.getElementById('showreel');
+  if(sr){ sr.style.setProperty('--cover','url("assets/cover.jpg")'); }
+
+  /* --- nav / progress / timeline scrub --- */
+  var nav = document.getElementById('nav');
+  var prog = document.getElementById('progress');
+  var tlSec = document.getElementById('timeline');
+  var ph = document.getElementById('tlPlayhead');
+  var tlTc = document.getElementById('tlTc');
+  function fmtTC(sec){ var m=Math.floor(sec/60), s=Math.floor(sec%60); return '00:'+pad(m)+':'+pad(s); }
+  function onScroll(){
+    var y = window.scrollY || window.pageYOffset;
+    nav.classList.toggle('scrolled', y > 30);
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    prog.style.width = (h>0 ? (y/h*100) : 0) + '%';
+    if(tlSec && ph){
+      var r = tlSec.getBoundingClientRect();
+      var total = tlSec.offsetHeight - window.innerHeight;
+      var scrolled = Math.min(Math.max(-r.top, 0), total);
+      var p = total>0 ? scrolled/total : 0;
+      ph.style.left = (5 + p*90) + '%';
+      if(tlTc) tlTc.textContent = fmtTC(p*60);
+    }
+  }
+  addEventListener('scroll', onScroll, {passive:true});
+  addEventListener('resize', onScroll);
+  onScroll();
+
+  /* --- cursor spotlight --- */
+  var spot = document.getElementById('spot');
+  if(spot && matchMedia('(pointer:fine)').matches && !reduced){
+    document.body.classList.add('has-cursor');
+    addEventListener('mousemove', function(e){
+      spot.style.transform = 'translate('+e.clientX+'px,'+e.clientY+'px) translate(-50%,-50%)';
+    }, {passive:true});
+  }
+
+  /* --- hero running timecode --- */
+  var tc = document.getElementById('tc');
+  if(tc && !reduced){
+    var frame = 0;
+    setInterval(function(){
+      frame++;
+      var f=frame%24, s=Math.floor(frame/24)%60, m=Math.floor(frame/1440)%60, hh=Math.floor(frame/86400)%24;
+      tc.textContent = [hh,m,s,f].map(pad).join(':');
+    }, 1000/24);
+  }
+
+  /* --- marquee seamless --- */
+  var mt = document.getElementById('marqueeTrack');
+  if(mt){ mt.innerHTML = mt.innerHTML + mt.innerHTML; }
+
+  /* --- timeline ruler + waveform --- */
+  var ruler = document.getElementById('tlRuler');
+  if(ruler){
+    for(var i=0;i<12;i++){ var it=document.createElement('i'); it.setAttribute('data-t','00:'+pad(i*5)); ruler.appendChild(it); }
+  }
+  var wave = document.getElementById('wave');
+  if(wave){
+    for(var j=0;j<150;j++){
+      var b=document.createElement('i');
+      var hh2 = 5 + Math.round(Math.abs(Math.sin(j*0.6)+Math.sin(j*0.21))*11);
+      b.style.height = Math.min(28,hh2)+'px';
+      wave.appendChild(b);
+    }
+  }
+
+  /* --- 3D card tilt --- */
+  document.querySelectorAll('.card').forEach(function(card){
+    card.addEventListener('mousemove', function(e){
+      var r = card.getBoundingClientRect();
+      var mx = (e.clientX-r.left)/r.width, my=(e.clientY-r.top)/r.height;
+      card.style.setProperty('--mx', (mx*100)+'%');
+      card.style.setProperty('--my', (my*100)+'%');
+      if(!reduced){ card.style.transform = 'perspective(900px) rotateX('+((0.5-my)*7)+'deg) rotateY('+((mx-0.5)*9)+'deg)'; }
+    });
+    card.addEventListener('mouseleave', function(){ card.style.transform=''; });
+  });
+
+  /* --- count-up stats --- */
+  function animateCount(el){
+    var target = parseFloat(el.dataset.target||'0');
+    var dec = parseInt(el.dataset.dec||'0',10);
+    var t0 = performance.now(), dur = 1500;
+    function step(t){
+      var k = Math.min(1,(t-t0)/dur);
+      var v = target*(1-Math.pow(1-k,3));
+      el.textContent = v.toFixed(dec);
+      if(k<1){ requestAnimationFrame(step); } else { el.textContent = target.toFixed(dec); }
+    }
+    requestAnimationFrame(step);
+  }
+  var cio = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ animateCount(e.target); cio.unobserve(e.target); } });
+  }, {threshold:0.6});
+  document.querySelectorAll('.count').forEach(function(c){ cio.observe(c); });
+
+  /* --- reel lightbox --- */
+  var lb = document.getElementById('lightbox');
+  function openLB(){ lb.classList.add('open'); lb.setAttribute('aria-hidden','false'); }
+  function closeLB(){ lb.classList.remove('open'); lb.setAttribute('aria-hidden','true'); }
+  var wb=document.getElementById('watchBtn'); if(wb) wb.addEventListener('click', openLB);
+  var rp=document.getElementById('reelPlay'); if(rp) rp.addEventListener('click', openLB);
+  var lc=document.getElementById('lbClose'); if(lc) lc.addEventListener('click', closeLB);
+  if(lb) lb.addEventListener('click', function(e){ if(e.target===lb) closeLB(); });
+  addEventListener('keydown', function(e){ if(e.key==='Escape') closeLB(); });
+
+  /* --- easter egg: click the logo 5× --- */
+  var brand = document.querySelector('.nav .brand');
+  var clicks = 0, lastT = 0;
+  function confettiPiece(){
+    var el = document.createElement('div');
+    el.className = 'floaty';
+    el.textContent = ['🎬','🎞️','✨','🎥','⭐'][Math.floor(Math.random()*5)];
+    el.style.position='fixed'; el.style.left=(window.innerWidth*(0.12+Math.random()*0.76))+'px';
+    el.style.top=(window.innerHeight*0.62)+'px'; el.style.zIndex=9999;
+    el.style.animation='floatUp '+(1.2+Math.random()*0.9)+'s ease-out forwards';
+    document.body.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 2300);
+  }
+  if(brand){
+    brand.addEventListener('click', function(e){
+      var now = Date.now();
+      if(now-lastT > 1300){ clicks = 0; }
+      lastT = now; clicks++;
+      if(clicks >= 5){
+        e.preventDefault(); clicks = 0;
+        var toast = document.getElementById('toast');
+        toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 1900);
+        for(var k=0;k<26;k++){ setTimeout(confettiPiece, k*40); }
+      }
+    });
+  }
+})();
+
+</script>
+</body>
+</html>
